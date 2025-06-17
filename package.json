@@ -1,0 +1,27 @@
+{
+  "name": "groupchatapp",
+  "version": "1.0.0",
+  "description": "nodejs express mysql ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shankhwarsumit1/GroupChat.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/shankhwarsumit1/GroupChat/issues"
+  },
+  "homepage": "https://github.com/shankhwarsumit1/GroupChat#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.1",
+    "nodemon": "^3.1.10",
+    "sequelize": "^6.37.7",
+    "validator": "^13.15.15"
+  }
+}
