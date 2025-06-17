@@ -42,7 +42,8 @@ const UserModel = sequelize.define('users', {
             args: [10, 10],
             msg:'phone number must be exactly 10 digits',
            }
-        }
+        },
+        unique:true
     },
     password:{
         type:DataTypes.STRING,

@@ -1,7 +1,8 @@
+
+
 window.addEventListener('DOMContentLoaded',()=>{
-   console.log(API_BASE);
     const form = document.querySelector('form');
-    const REST_API = `http://localhost:5000/signup`
+    const REST_API = `http://localhost:5000/user/signup`
     form.addEventListener('submit',async(event)=>{
         event.preventDefault()
         try{
@@ -11,12 +12,15 @@ window.addEventListener('DOMContentLoaded',()=>{
                password:event.target.password.value,
                phonenumber:event.target.phonenumber.value
           };
-          await axios.post(REST_API,user);
-        //   window.location.href = '../login/login.html';
+          const res = await axios.post(REST_API,user);
+          if(res.data.success===true){
+          alert('Successfuly signed up')
+          }
+      
         }
         catch(err){
-            console.log(user);
-            alert(err.message);
+        console.log(err);
+         alert(err.response.data.error);
         }
     })
 

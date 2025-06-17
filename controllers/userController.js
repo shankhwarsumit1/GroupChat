@@ -12,6 +12,10 @@ const signup = async (req,res)=>{
 
     }
        catch(err){
+        console.log(err);
+      if (err.name==='SequelizeUniqueConstraintError') {
+      return res.status(409).json({ success: false, error: err.errors[0].message });
+      }
         res.status(400).json({success:false,'error':err.message});
        }
 }
