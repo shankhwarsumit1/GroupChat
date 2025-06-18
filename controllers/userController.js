@@ -1,6 +1,9 @@
 const bcrypt = require('bcrypt');
 const UserModel = require('../models/UserModel');
 const {validateSignupData} = require('../utils/validator');
+const JWT = require('jsonwebtoken');
+const SECRETKEY = 'sumit';
+
 const signup = async (req,res)=>{
        try{
          validateSignupData(req);
@@ -20,4 +23,24 @@ const signup = async (req,res)=>{
        }
 }
 
-module.exports = {signup};
+const login = async(req,res)=>{
+try{
+    const {email,password} = req.body;
+    const user = await UserModel.findOne({where:{email:email}});
+    if(!user){
+     return  res.status(404).json({success:false,'error':'user not found'});
+    }
+    const hashPassword = user.password;
+    const isPasswordValid = bcrypt.compare(user.password,hashPassword);
+    if(!isPasswordValid){
+      return  res.status(401).json({success:false,'error':'user not authorized'});
+
+    }
+    const token = JWT.sign({userId:user.id},SECRETKEY);
+    res.status(200).json({success:'true',res:'user login successfull','token':token})
+}
+catch(err){
+  res.status(400).json({success:false,'error':err.message});}
+}
+
+module.exports = {signup,login};

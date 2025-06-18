@@ -2,7 +2,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const emailInput = document.querySelector('#email');
     const passwordInput = document.querySelector('#password');
     const loginBtn = document.querySelector('#login-btn');
-    const REST_API = `${API_BASE}/user/login`;
+    const REST_API = `http://127.0.0.1:5000/user/login`;
 
     loginBtn.addEventListener('click', async (event) => {
         event.preventDefault();
@@ -14,9 +14,11 @@ window.addEventListener('DOMContentLoaded', () => {
             const response = await axios.post(REST_API, user);
             if(response.data.success){         
                 emailInput.value='';
-                passwordInput.value='';   
+                passwordInput.value='';
+                localStorage.setItem('token',response.data.token);
+   
             }else{
-            alert(response.data.message);
+            alert(response.data.errror);
             }
         } catch (err) {
             if (err.response.data.message) {
