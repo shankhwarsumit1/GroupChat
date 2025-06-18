@@ -1,5 +1,7 @@
 const sequelize = require('../utils/db-connect');
 const {DataTypes} = require('sequelize');
+const JWT = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
 const UserModel = sequelize.define('users', {
     id:{
@@ -56,5 +58,16 @@ const UserModel = sequelize.define('users', {
         }
     }
 })
+
+UserModel.prototype.getJWT =async function(){
+    const token=await JWT.sign({id:this.id},'sumit');
+    return token;
+}
+
+UserModel.prototype.isPasswordValid =async function(userInputPassword){
+    const hashPassword = this.password;
+    const isPasswordValid = await bcrypt.compare(userInputPassword,hashPassword);
+    return isPasswordValid;
+}
 
 module.exports = UserModel;
