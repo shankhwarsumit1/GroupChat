@@ -130,7 +130,7 @@ body {
 }
 
 /* Responsive layout */
-@media (max-width: 768px) {
+@media (max-width: 400px) {
   .main-container {
     flex-direction: column;
     align-items: stretch;

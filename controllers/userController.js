@@ -33,11 +33,26 @@ try{
       return  res.status(401).json({success:false,'error':'user not authorized'});
 
     }
+    
     const token = await user.getJWT();
     res.status(200).json({success:'true',res:'user login successfull','token':token})
 }
 catch(err){
-  res.status(400).json({success:false,'error':err.message});}
+  res.status(400).json({success:false,'error':err.message});
+}
 }
 
-module.exports = {signup,login};
+const getUserData = async(req,res)=>{
+  try{
+       const {name,email,phonenumber} = req.user;
+       const userData = {name,email,phonenumber};
+       res.status(201).json({success:true,res:userData});
+  }
+  catch(err){
+  console.log(err);
+   res.status(400).json({success:false,'error':err.message});
+
+  }
+}
+
+module.exports = {signup,login,getUserData};
