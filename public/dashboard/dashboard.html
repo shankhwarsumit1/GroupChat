@@ -8,20 +8,34 @@
 </head>
 <body>
     <h1 id="main-heading">CHAT APP</h1>
-    <div id="chatblock">
-        <ul id="chatlist">
-            <li class="chat-element">
-            <span class="user">sumit:</span><span class="chat">chat</span>
-        </li>
-          <li class="chat-element">
-            <span class="user">sumit:</span><span class="chat">chat</span>
-        </li>
-    </ul>
-    </div>
-    <div id="input">
-        <label for="message">write something</label>
-        <input type="text" name="message" id="message">
-        <button type="click" id="send-btn">SEND</button>
+
+    <div class="main-container">
+        <div class="users-div">
+            <h2 id="online-users-heading">currently online</h2>
+            <ul id="user-list">
+                <li class="user-list-element">Sumit</li>
+            </ul>
+        </div>
+
+        <div class="chat-section">
+            <div id="chatblock">
+                <ul id="chatlist">
+                    <li class="chat-element">
+                        <span class="user">sumit:</span><span class="chat">chat</span>
+                    </li>
+                    <li class="chat-element">
+                        <span class="user">sumit:</span><span class="chat">chat</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div id="input">
+                <label for="message">write something</label>
+                <input type="text" name="message" id="message">
+                <button type="click" id="send-btn">SEND</button>
+            </div>
+        </div>
     </div>
 </body>
+
 </html>
