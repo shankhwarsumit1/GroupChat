@@ -15,6 +15,7 @@ window.addEventListener('DOMContentLoaded',()=>{
           const res = await axios.post(REST_API,user);
           if(res.data.success===true){
           alert('Successfuly signed up')
+          window.location.href='../login/login.html';
           }
       
         }

@@ -25,18 +25,19 @@ const signup = async (req,res)=>{
 
 const login = async(req,res)=>{
 try{
-    const {email,password} = req.body;
+    const {email,password:enteredPassword} = req.body;
     const user = await UserModel.findOne({where:{email:email}});
     if(!user){
      return  res.status(404).json({success:false,'error':'user not found'});
     }
     const hashPassword = user.password;
-    const isPasswordValid = bcrypt.compare(user.password,hashPassword);
+    const isPasswordValid =await  bcrypt.compare(enteredPassword,hashPassword);
+    console.log(isPasswordValid);
     if(!isPasswordValid){
       return  res.status(401).json({success:false,'error':'user not authorized'});
 
     }
-    const token = JWT.sign({userId:user.id},SECRETKEY);
+    const token = await JWT.sign({userId:user.id},SECRETKEY);
     res.status(200).json({success:'true',res:'user login successfull','token':token})
 }
 catch(err){

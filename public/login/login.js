@@ -16,18 +16,11 @@ window.addEventListener('DOMContentLoaded', () => {
                 emailInput.value='';
                 passwordInput.value='';
                 localStorage.setItem('token',response.data.token);
-   
-            }else{
-            alert(response.data.errror);
+                alert(response.data.res)
             }
         } catch (err) {
-            if (err.response.data.message) {
-                alert(err.response.data.message);
-            } else {
-                alert('An error occurred');
-            }
+            alert(err.response.data.error);
             console.log(err);
-     
         }
     });
 
