@@ -3,12 +3,12 @@ const {Op} = require('sequelize');
 
 const sendMessage = async(req,res)=>{
     try{
-       const {message} = req.body;
+       const {message,groupId} = req.body;
        const userName = req.user.name;
-       if(!message){
-        return res.status(400).json({success:false,error:'please write a message'});
+       if(!message || !groupId){
+        return res.status(400).json({success:false,error:'invalid request'});
        }
-       const chatData = await ChatModel.create({message:message,userId:req.user.id,userName:userName});
+       const chatData = await ChatModel.create({message:message,userId:req.user.id,userName:userName,groupId:groupId});
        res.status(201).json({success:true,res:'successfully sent a message',chat:chatData});
 
     }
@@ -20,22 +20,24 @@ const sendMessage = async(req,res)=>{
 
 const getMessages = async(req,res)=>{
     try{  const {messageId} = req.params;
+          const {groupId} = req.body;
           let chats;       
 
           if(messageId==='undefined'){    
             console.log(chats);
          chats = await ChatModel.findAll({
-             attributes:['id','message','userName'],
+             attributes:['id','message','userName','groupId'],
               order:[['id','desc']],
               limit:100,
+              where:{groupId:groupId}
              });
              console.log(chats);
           }
          else{        
           chats = await ChatModel.findAll({
-            attributes:['id','message','userName'],
-            where:{
-                id:{ [Op.lte]:messageId } },
+            attributes:['id','message','userName','groupId'],
+            where:{id:{ [Op.lte]:messageId },
+                   groupId:groupId },
                 order:[['id','desc']],
                 limit:100
             })

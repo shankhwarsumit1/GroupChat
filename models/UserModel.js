@@ -57,6 +57,7 @@ const UserModel = sequelize.define('users', {
             }
         }
     }
+ 
 })
 
 UserModel.prototype.getJWT =async function(){

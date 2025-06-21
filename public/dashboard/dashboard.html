@@ -7,32 +7,61 @@
     <title>CHAT APP</title>
 </head>
 <body>
+
+    <div class="header-bar">
     <h1 id="main-heading">CHAT APP</h1>
+    <div class="header-buttons">
+      <button id="create-group-btn">+ Create Group</button>
+      <button id="logout-btn">Logout</button>
+    </div>
+  </div>
+  
+  <!-- Create Group Modal -->
+<div id="group-modal" class="modal hidden">
+  <div class="modal-content">
+    <span class="close-btn" id="close-modal">&times;</span>
+    <h2>Create Group</h2>
+    
+    <input type="text" id="group-name-input" placeholder="Enter group name" />
+
+    <h3>Select Users:</h3>
+    <ul id="all-users-list">
+      <!-- Populated by JS -->
+    </ul>
+
+    <button id="create-group-final">Create Group</button>
+  </div>
+</div>
 
     <div class="main-container">
         <div class="users-div">
-            <h2 id="online-users-heading">currently online</h2>
-            <ul id="user-list">
-             
-            </ul>
+            <div class="groups-section">
+                <h2 id="groups-heading">Groups</h2>
+                <ul id="group-list">
+                </ul>
+            </div>
         </div>
 
         <div class="chat-section">
-            <button id="load-older-btn">⬆ Load Older Messages</button>
+            <div class="chatsection-header">
+              <button type="click" id="adduser">+AddUsers</button>
+              <h1 id="group-heading">Open a group</h1>
+           
+          </div>
+            <button id="load-older-btn" hidden>⬆ Load Older Messages</button>
             <div id="chatblock">
                 <ul id="chatlist">
                 </ul>
             </div>
 
             <div id="input">
-                <label for="message">write something</label>
-                <input type="text" name="message" id="message">
+                <input type="text" name="message" id="message" placeholder="write something...">
                 <button type="click" id="send-btn">SEND</button>
             </div>
-
         </div>
     </div>
+
+    <script src="./dashboard.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.9.0/axios.min.js"></script>
 </body>
-  <script src="./dashboard.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.9.0/axios.min.js"></script>
 </html>

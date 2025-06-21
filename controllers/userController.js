@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const UserModel = require('../models/UserModel');
 const {validateSignupData} = require('../utils/validator');
+const { get } = require('../routers/userRouter');
 
 const signup = async (req,res)=>{
        try{
@@ -35,6 +36,8 @@ try{
     }
     
     const token = await user.getJWT();
+    user.isOnline = '1';
+    await user.save()
     res.status(200).json({success:'true',res:'user login successfull','token':token})
 }
 catch(err){
@@ -44,8 +47,8 @@ catch(err){
 
 const getUserData = async(req,res)=>{
   try{
-       const {name,email,phonenumber} = req.user;
-       const userData = {name,email,phonenumber};
+       const {id,name,email,phonenumber} = req.user;
+       const userData = {id,name,email,phonenumber};
        res.status(201).json({success:true,res:userData});
   }
   catch(err){
@@ -55,4 +58,18 @@ const getUserData = async(req,res)=>{
   }
 }
 
-module.exports = {signup,login,getUserData};
+const getAllUsers = async(req,res)=>{
+  try{
+
+      const users = await UserModel.findAll();
+       res.status(201).json({success:true,res:users});
+  }
+  catch(err){
+  console.log(err);
+   res.status(400).json({success:false,'error':err.message});
+
+  }
+}
+
+
+module.exports = {signup,login,getUserData,getAllUsers};
