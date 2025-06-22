@@ -11,14 +11,6 @@ const GroupModel = sequelize.define('groups',{
     groupName:{
          type:DataTypes.STRING,
          allowNull:false
-    },
-    adminId:{
-        type:DataTypes.INTEGER,
-        allowNull:false
-    },
-    adminName:{
-        type:DataTypes.STRING,
-        allowNull:false
     }
 })
 

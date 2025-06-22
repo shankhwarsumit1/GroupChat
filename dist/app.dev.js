@@ -12,6 +12,9 @@ var groupRouter = require('./routers/groupRouter');
 
 var cors = require('cors');
 
+var _require = require('sequelize/lib/index-hints'),
+    FORCE = _require.FORCE;
+
 require('./models');
 
 var app = express();
@@ -23,7 +26,9 @@ app.use(express.json());
 app.use('/user', userRouter);
 app.use('/chat', chatRouter);
 app.use('/', groupRouter);
-db.sync().then(function () {
+db.sync({
+  force: true
+}).then(function () {
   app.listen(5000, function () {
     console.log('groupchat app running on port 5000');
   });

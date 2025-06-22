@@ -9,6 +9,10 @@ const UserGroup = sequelize.define('usergroup',{
     userid:{
          type:DataTypes.INTEGER,
          allowNull:false
+    },
+    isAdmin:{
+        type:DataTypes.BOOLEAN,
+        defaultValue:false
     }
 })
 

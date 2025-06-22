@@ -1,4 +1,5 @@
-/* Basic reset */
+/* dashboard.css */
+
 * {
   margin: 0;
   padding: 0;
@@ -18,7 +19,40 @@ body {
   color: #333;
 }
 
-/* FLEX container for layout */
+.header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+}
+
+.header-bar h1 {
+  font-size: 1.5rem;
+  color: #333;
+}
+
+.header-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.header-buttons button {
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  background-color: #0077cc;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.header-buttons button:hover {
+  background-color: #005fa3;
+}
+
+/* Layout */
 .main-container {
   display: flex;
   justify-content: center;
@@ -28,7 +62,6 @@ body {
   margin: 0 auto;
 }
 
-/* Users list section */
 .users-div {
   width: 250px;
   height: 500px;
@@ -38,18 +71,59 @@ body {
   padding: 15px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   overflow-y: auto;
-}
-#group-heading {
-  text-align: center;
-  font-size: 1.5rem;
-  color: white;
-  padding: 10px 0;
-  border-bottom: 1px solid #ccc;
-  background-color:black;
-  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-/* Chat section */
+.online-section,
+.groups-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+#groups-heading {
+  color: #0077cc;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 5px;
+}
+
+#group-list,
+#user-list {
+  list-style: none;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+#group-list li {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.group-button {
+  display: block;
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  background-color: #0077cc;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.3s ease;
+}
+
+.group-button:hover {
+  background-color: #005fa3;
+}
+
+/* Chat Section */
 .chat-section {
   flex: 1;
   display: flex;
@@ -63,7 +137,38 @@ body {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
-/* Scrollable chat area */
+.chatsection-header {
+  padding: 10px 15px;
+  background-color: #f1f1f1;
+  border-bottom: 1px solid #ddd;
+}
+
+.group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#group-heading {
+  font-size: 1.5rem;
+  margin: 0;
+  color: #000;
+}
+
+.settings-btn {
+  background-color: #3498db;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.settings-btn.hidden {
+  display: none;
+}
+
 #chatblock {
   flex: 1;
   padding: 15px;
@@ -89,7 +194,6 @@ body {
   color: #333;
 }
 
-/* Input area fixed at bottom of chat-section */
 #input {
   padding: 10px;
   display: flex;
@@ -120,26 +224,124 @@ body {
 #send-btn:hover {
   background-color: #005fa3;
 }
+
 #load-older-btn {
-    background-color: #4CAF50;
-    color: white;
-    padding: 8px 16px;
-    font-size: 14px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-bottom: 10px;
-    width: 100%;
-    transition: background-color 0.3s ease;
+  background-color: #4CAF50;
+  color: white;
+  padding: 8px 16px;
+  font-size: 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 10px auto;
+  width: calc(100% - 30px);
+  transition: background-color 0.3s ease;
 }
 
 #load-older-btn:hover {
-    background-color: #45a049;
+  background-color: #45a049;
 }
 
+/* Modals */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
 
-/* Responsive layout */
-@media (max-width: 400px) {
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 400px;
+  max-height: 80%;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+  margin-bottom: 1rem;
+}
+
+.close-btn {
+  position: absolute;
+  top: 8px;
+  right: 14px;
+  font-size: 20px;
+  cursor: pointer;
+  color: #888;
+}
+
+#group-name-input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+#all-users-list,
+#settings-users-list {
+  list-style: none;
+  padding: 0;
+  margin-bottom: 1rem;
+}
+
+#all-users-list li,
+#settings-users-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+#all-users-list li button,
+#settings-users-list li button {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.add-btn {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.admin-btn {
+  background-color: #e67e22;
+  color: white;
+}
+
+.remove-btn {
+  background-color: #f20909;
+  color: white;
+}
+
+#settings-done-btn {
+  background-color: #34495e;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
   .main-container {
     flex-direction: column;
     align-items: stretch;
@@ -154,154 +356,4 @@ body {
     flex-direction: column;
     align-items: stretch;
   }
-}
-.users-div {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.online-section,
-.groups-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-
-#user-list,
-#group-list {
-  list-style: none;
-  overflow-y: auto;
-  padding-right: 5px;
-}
-
-#groups-heading {
-  color: #0077cc;
-  font-size: 1.2rem;
-  margin-bottom: 10px;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 5px;
-}
-
-#group-list li {
-  padding: 8px;
-  border-bottom: 1px solid #eee;
-}
-  .group-button {
-            display: block;
-            width: 100%;
-            margin-bottom: 8px;
-            padding: 8px 12px;
-            background-color: #0077cc;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            text-align: left;
-            transition: background-color 0.3s ease;
-        }
-
-        .group-button:hover {
-            background-color: #005fa3;
-        }
-.header-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  padding: 5px 10px;
-}
-
-.header-bar h1 {
-  font-size: 1.5rem; /* Smaller than default ~2rem+ */
-  margin: 0;
-  color: #333;
-}
-
-.header-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.header-buttons button {
-  padding: 6px 12px;
-  font-size: 0.85rem;
-  background-color: #0077cc;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.header-buttons button:hover {
-  background-color: #005fa3;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0,0,0,0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-.modal.hidden {
-  display: none;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  width: 400px;
-  max-height: 80%;
-  overflow-y: auto;
-  border-radius: 8px;
-  position: relative;
-  box-shadow: 0 0 10px rgba(0,0,0,0.25);
-}
-
-.close-btn {
-  position: absolute;
-  top: 8px;
-  right: 12px;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-#group-name-input {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-#all-users-list {
-  list-style: none;
-  padding: 0;
-}
-
-#all-users-list li {
-  margin-bottom: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-#all-users-list button {
-  padding: 4px 8px;
-  background-color: #0077cc;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 0.85rem;
-  cursor: pointer;
 }

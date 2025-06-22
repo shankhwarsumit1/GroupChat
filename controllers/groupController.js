@@ -1,6 +1,8 @@
 const GroupModel = require('../models/groupModel');
 const UserModel = require('../models/UserModel');
+const UserGroup = require('../models/UserGroup');
 const sequelize = require('../utils/db-connect');
+const { where } = require('sequelize');
 const createGroup = async(req,res)=>{
     const transaction = await sequelize.transaction();
     try{  
@@ -17,10 +19,13 @@ const createGroup = async(req,res)=>{
 
           const group = await GroupModel.create({
             groupName,
-            adminId:user.id,
-            adminName:user.name
           },{transaction});
-          await user.addGroup(group,{transaction});
+           
+         await UserGroup.create({
+                   userid: user.id,
+                   groupid: group.id,
+                   isAdmin: true
+                   }, { transaction });
 
           const uniqueMemberIds = members.filter(id=>id !==user.id);
           
@@ -76,5 +81,70 @@ const getGroups = async(req,res)=>{
    }
 }
 
+const makeAdmin = async(req,res)=>{
+  try{
+       const {groupId,userId} = req.body;
 
-module.exports = {createGroup,addUser,getGroups};
+       if(!groupId || !userId){
+        return res.status(400).json({ success: false, message: 'invalid request'});
+       }
+       const result = await UserGroup.update(
+        {isAdmin:true},
+       { where:{userId:userId,groupId:groupId}});
+       if(!result){
+             return res.status(400).json({ success: false, message: 'invalid request'});
+       }
+       res.status(200).json({success:true,message:`made admin successfully`});
+  }
+  catch(err){
+    console.log(err);
+    res.status(500).json({success:false,error:err.message});
+  }
+}
+
+const isUserAdmin = async(req,res)=>{
+  try{
+        const {userId,groupId}= req.query;
+       if(!groupId || !userId){
+        return res.status(400).json({ success: false, message: 'invalid request'});
+       }
+
+        const groupdata = await UserGroup.findOne({
+          where:{userId,groupId}
+        })
+        if(!groupdata){
+          return res.status(400).json({ success: false, message: 'data not found'});
+        }
+
+        const isUserAdmin = groupdata.isAdmin;
+        res.status(200).json({success:true,isUserAdmin});
+
+  }
+  catch(err){
+    console.log(err);
+    res.status(500).json({success:false,error:err.message});
+  }
+}
+
+const removeUser = async(req,res)=>{
+  try{
+      const {userId,groupId} = req.query;
+       if(!groupId || !userId){
+        return res.status(400).json({ success: false, message: 'invalid request'});
+       }
+      const response = await UserGroup.destroy({
+        where:{userId,groupId}
+      })
+       if(!response){
+          return res.status(400).json({ success: false, message: 'data not found'});
+        }
+      res.status(200).json({success:true,message:'successfully removed the user'});
+
+  }
+  catch(err){
+    console.log(err);
+    res.status(500).json({success:false,error:err.message});
+  }
+}
+
+module.exports = {createGroup,addUser,getGroups,makeAdmin,isUserAdmin,removeUser};

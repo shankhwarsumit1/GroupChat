@@ -1,67 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="./dashboard.css">
-    <title>CHAT APP</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="./dashboard.css" />
+  <title>CHAT APP</title>
 </head>
 <body>
 
-    <div class="header-bar">
+  <!-- Header -->
+  <div class="header-bar">
     <h1 id="main-heading">CHAT APP</h1>
     <div class="header-buttons">
       <button id="create-group-btn">+ Create Group</button>
       <button id="logout-btn">Logout</button>
     </div>
   </div>
-  
+
   <!-- Create Group Modal -->
-<div id="group-modal" class="modal hidden">
-  <div class="modal-content">
-    <span class="close-btn" id="close-modal">&times;</span>
-    <h2>Create Group</h2>
-    
-    <input type="text" id="group-name-input" placeholder="Enter group name" />
-
-    <h3>Select Users:</h3>
-    <ul id="all-users-list">
-      <!-- Populated by JS -->
-    </ul>
-
-    <button id="create-group-final">Create Group</button>
+  <div id="group-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-btn" id="close-modal">&times;</span>
+      <h2>Create Group</h2>
+      <input type="text" id="group-name-input" placeholder="Enter group name" />
+      <h3>Select Users:</h3>
+      <ul id="all-users-list"></ul>
+      <button id="create-group-final">Create Group</button>
+    </div>
   </div>
-</div>
 
-    <div class="main-container">
-        <div class="users-div">
-            <div class="groups-section">
-                <h2 id="groups-heading">Groups</h2>
-                <ul id="group-list">
-                </ul>
-            </div>
-        </div>
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-btn" id="close-settings">&times;</span>
+      <h2>Group Settings</h2>
+      <ul id="settings-users-list">
+        <!-- Populated by JS -->
+      </ul>
+      <button id="settings-done-btn">Done</button>
+    </div>
+  </div>
 
-        <div class="chat-section">
-            <div class="chatsection-header">
-              <button type="click" id="adduser">+AddUsers</button>
-              <h1 id="group-heading">Open a group</h1>
-           
-          </div>
-            <button id="load-older-btn" hidden>⬆ Load Older Messages</button>
-            <div id="chatblock">
-                <ul id="chatlist">
-                </ul>
-            </div>
-
-            <div id="input">
-                <input type="text" name="message" id="message" placeholder="write something...">
-                <button type="click" id="send-btn">SEND</button>
-            </div>
-        </div>
+  <!-- Main Chat Layout -->
+  <div class="main-container">
+    
+    <!-- Left Sidebar -->
+    <div class="users-div">
+      <div class="groups-section">
+        <h2 id="groups-heading">Groups</h2>
+        <ul id="group-list"></ul>
+      </div>
     </div>
 
-    <script src="./dashboard.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.9.0/axios.min.js"></script>
+    <!-- Chat Section -->
+    <div class="chat-section">
+      
+      <!-- Chat Header with Group Name + Settings -->
+      <div class="chatsection-header">
+        <div class="group-header">
+          <h1 id="group-heading">Open a group</h1>
+          <button id="open-settings-btn" class="settings-btn" hidden>⚙️ Settings</button>
+        </div>
+      </div>
+
+      <!-- Load Older -->
+      <button id="load-older-btn" hidden>⬆ Load Older Messages</button>
+
+      <!-- Messages -->
+      <div id="chatblock">
+        <ul id="chatlist"></ul>
+      </div>
+
+      <!-- Input Area -->
+      <div id="input">
+        <input type="text" name="message" id="message" placeholder="write something..." />
+        <button type="click" id="send-btn">SEND</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="./dashboard.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.9.0/axios.min.js"></script>
 </body>
 </html>
