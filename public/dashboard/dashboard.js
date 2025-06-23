@@ -21,21 +21,20 @@ window.addEventListener('DOMContentLoaded', () => {
     const settingsUserList = document.getElementById('settings-users-list');
     let currentUser;
     let selectedUserIds = [];
-    let localmessages = [];
     let readmessages = {};
     let sendBtnClick = false;
     let currentGroup;
-    let isUserAdmin;
+    let oldmessages = {};
+    let olderBtnClick = false;
     if (!token || token === null) {
         window.location.href = '../login/login.html';
     };
-
 
     settingsBtn.addEventListener('click', async () => {
         settingsModal.classList.remove('hidden');
         settingsUserList.innerHTML = '';
         try {
-            const isAdminResponse = await axios.get(`http://localhost:5000/isUserAmin?userId=${currentUser.id}&groupId=${currentGroup.id}`, {
+            const isAdminResponse = await axios.get(`${BASE_URL}/isUserAmin?userId=${currentUser.id}&groupId=${currentGroup.id}`, {
                 headers: {
                     token
                 }
@@ -43,7 +42,7 @@ window.addEventListener('DOMContentLoaded', () => {
             if (isAdminResponse.data.isUserAdmin) {
 
                 const groupId = currentGroup.id;
-                const res = await axios.get(`http://localhost:5000/user/getAllUsers/${groupId}`, {
+                const res = await axios.get(`${BASE_URL}/user/getAllUsers/${groupId}`, {
                     headers: {
                         token
                     }
@@ -80,7 +79,7 @@ window.addEventListener('DOMContentLoaded', () => {
                         const userId = rmbtn.getAttribute('data-id');
 
                         try {
-                            const result = await axios.delete(`http://localhost:5000/removeuser`, {
+                            const result = await axios.delete(`${BASE_URL}/removeuser`, {
                                 params: {
                                     groupId: currentGroup.id,
                                     userId
@@ -90,15 +89,12 @@ window.addEventListener('DOMContentLoaded', () => {
                                 }
                             });
                             const li = rmbtn.parentElement;
-                            const nameEmail = li.querySelector('span').innerText; // e.g. "User A (a@example.com)"
-                            li.innerHTML = `
-        <span>${nameEmail}</span>
-        <button class="add-btn" data-id="${userId}">Add</button>
-      `;
+                            const nameEmail = li.querySelector('span').innerText;
+                            li.innerHTML = `<span>${nameEmail}</span><button class="add-btn" data-id="${userId}">Add</button>`;
 
                             const newAddBtn = li.querySelector('.add-btn');
                             newAddBtn.addEventListener('click', async () => {
-                                await axios.post(`http://localhost:5000/addUser`, {
+                                await axios.post(`${BASE_URL}/addUser`, {
                                     groupId: currentGroup.id,
                                     userId
                                 }, {
@@ -120,7 +116,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 document.querySelectorAll('.add-btn').forEach(btn => {
                     btn.addEventListener('click', async () => {
                         const userId = btn.getAttribute('data-id');
-                        await axios.post(`http://localhost:5000/addUser`, {
+                        await axios.post(`${BASE_URL}/addUser`, {
                             groupId: currentGroup.id,
                             userId
                         }, {
@@ -138,7 +134,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     btn.addEventListener('click', async () => {
 
                         const userId = btn.getAttribute('data-id');
-                        await axios.post(`http://localhost:5000/makeAdmin`, {
+                        await axios.post(`${BASE_URL}/makeAdmin`, {
                             groupId: currentGroup.id,
                             userId
                         }, {
@@ -174,7 +170,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     async function getCurrentUser() {
         try {
-            const response = await axios.get('http://localhost:5000/user/getUserData', {
+            const response = await axios.get(`${BASE_URL}/user/getUserData`, {
                 headers: {
                     'token': token
                 }
@@ -197,33 +193,35 @@ window.addEventListener('DOMContentLoaded', () => {
         chatblock.scrollTop = chatblock.scrollHeight;
     }
 
-   
+
     async function loadGroups() {
         try {
             let isGroupExists = false;
-            const res = await axios.get('http://localhost:5000/getGroups', {
+            const res = await axios.get(`${BASE_URL}/getGroups`, {
                 headers: {
                     token
                 }
-            });              
-            grouplist.innerHTML='';
-           
-            res.data.groups.forEach((grp) => {     
-                 if(currentGroup){
-                    if(grp.id===currentGroup.id){
-                       isGroupExists=true;
+            });
+            grouplist.innerHTML = '';
+
+            res.data.groups.forEach((grp) => {
+                if (currentGroup) {
+                    if (grp.id === currentGroup.id) {
+                        isGroupExists = true;
                     }
-               }
+                }
                 displayGroup(grp);
-            })                    
-            if(currentGroup&&!isGroupExists){
-            window.location.reload();
+            })
+
+            if (currentGroup && !isGroupExists) {
+                window.location.reload();
             }
         } catch (err) {
             console.log(err);
         }
     }
     loadGroups();
+
     function displayGroup(group) {
         const groupli = document.createElement('li');
         groupli.innerHTML = `<button class="group-button" data-group-id="${group.id}" data-admin-id="${group.adminId}">${group.groupName}</button>`
@@ -234,28 +232,22 @@ window.addEventListener('DOMContentLoaded', () => {
         } = group;
         const groupId = id;
         readmessages = JSON.parse(localStorage.getItem('localmessages')) || {};
-        if (!localStorage.getItem('localmessages')) {
+        if (!readmessages[groupId]) {
             readmessages[groupId] = [];
-            console.log('undef');
             localStorage.setItem('localmessages', JSON.stringify(readmessages));
         } else if (readmessages[groupId] === undefined) {
             readmessages[groupId] = [];
-            console.log(readmessages[groupId]);
-
             localStorage.setItem('localmessages', JSON.stringify(readmessages));
         }
         const groupBtn = groupli.querySelector('.group-button');
 
-
         groupBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            olderBtnClick = false;
             chatlist.innerHTML = '';
-
-            // console.log(e.target.getAttribute('data-group-id'));
-            // console.log(e.target.getAttribute('data-admin-id'));
             groupHeading.innerHTML = `${groupName}`;
-
-            loadOlderBtn.hidden = false;
+            currentGroup = group;
+            loadOlderBtn.hidden = true;
             settingsBtn.hidden = false;
             implementChatSection(group);
         })
@@ -268,7 +260,7 @@ window.addEventListener('DOMContentLoaded', () => {
         selectedUserIds = [];
 
         try {
-            const res = await axios.get(`http://localhost:5000/user/getAllUsers`, {
+            const res = await axios.get(`${BASE_URL}/user/getAllUsers`, {
                 headers: {
                     token
                 }
@@ -319,7 +311,7 @@ window.addEventListener('DOMContentLoaded', () => {
         try {
 
 
-            const res = await axios.post('http://localhost:5000/createGroup', {
+            const res = await axios.post(`${BASE_URL}/createGroup`, {
                 groupName,
                 members: selectedUserIds
             }, {
@@ -340,9 +332,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     async function implementChatSection(group) {
         try {
-            currentGroup = group;
             loadChats(group);
-
+            messageInput.hidden = false;
+            sendMessageBtn.hidden = false;
         } catch (err) {
             console.log(err);
 
@@ -359,9 +351,8 @@ window.addEventListener('DOMContentLoaded', () => {
                     return chat.groupId == groupId
                 });
             }
-
             if (!sendBtnClick) {
-                res = await axios.post(`http://localhost:5000/chat/getMessages/${undefined}`, {
+                res = await axios.post(`${BASE_URL}/chat/getMessages/${undefined}`, {
                         groupId
                     }, {
                         headers: {
@@ -374,7 +365,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 sendBtnClick = false;
                 const lastChat = readmessages[groupId][readmessages[groupId].length - 1];
                 const lastChatId = lastChat.id;
-                res = await axios.post(`http://localhost:5000/chat/getMessages/${lastChatId}`, {
+                res = await axios.post(`${BASE_URL}/chat/getMessages/${lastChatId}`, {
                     groupId,
                 }, {
                     headers: {
@@ -383,7 +374,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 })
             } else {
                 sendBtnClick = false;
-                res = await axios.post(`http://localhost:5000/chat/getMessages/${undefined}`, {
+                res = await axios.post(`${BASE_URL}/chat/getMessages/${undefined}`, {
                     groupId,
                 }, {
                     headers: {
@@ -391,7 +382,10 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 })
             }
-            const arr = res.data.chats;
+
+            const arr = res.data.chats || [];
+            const hasMore = res.data.hasMore;
+
 
             if (readmessages[groupId].length != 0) {
                 arr.forEach((chat) => {
@@ -402,37 +396,100 @@ window.addEventListener('DOMContentLoaded', () => {
                         readmessages[groupId].push(chat);
                     }
                 })
-                localStorage.setItem('localmessages', JSON.stringify(readmessages));
-
             } else {
                 readmessages[groupId] = arr;
-                localStorage.setItem('localmessages', JSON.stringify(readmessages));
             }
+            localStorage.setItem('localmessages', JSON.stringify(readmessages));
             chatlist.innerHTML = '';
             readmessages[groupId].forEach((i) => {
                 if (i.groupId == groupId)
                     displayChat(i);
             })
+
         } catch (err) {
             console.log(err.message);
         }
     };
+
+    let isLoading = false;
+    setInterval(async() => {
+        if (!olderBtnClick && !isLoading) {
+            isLoading = true;
+            try{
+            loadChats(currentGroup);
+            loadGroups();
+            // scrollToBottom();
+            console.log("loading");}
+            catch(err){
+                console.log(err);
+            }
+            isLoading = false;
+        }
+    }, 3000);
+
+    setInterval(() => {
+        localStorage.setItem('oldmessages', JSON.stringify({}));
+                                scrollToBottom();
+    }, 2 * 60 * 1000);
+
+
+
+
+
+    chatblock.addEventListener('scroll', async () => {
+        if (!olderBtnClick && chatblock.scrollTop <= 0 && currentGroup) {
+            let localOldest = readmessages[currentGroup.id][0];
+            res = await axios.post(`${BASE_URL}/chat/getMessages/${localOldest.id}`, {
+                groupId: currentGroup.id,
+            }, {
+                headers: {
+                    'token': token
+                }
+            });
+            const arr = res.data.chats;
+            if (arr[0].id < readmessages[currentGroup.id][0].id) {
+                console.log('uees');
+                if (chatblock.scrollTop <= 0 && currentGroup) {
+                    loadOlderBtn.hidden = false;
+                } else {
+                    loadOlderBtn.hidden = true;
+                }
+            }
+        } else  {
+             const clientHeight = chatblock.clientHeight;
+             const scrollHeight = chatblock.scrollHeight;
+             const scrollTop= chatblock.scrollTop;
+            if(clientHeight+scrollTop>=scrollHeight-1){
+               olderBtnClick=false;
+               loadOlderBtn.hidden=true;
+             }
+        }
+    });
+
+
+
 
     loadOlderBtn.addEventListener('click', async (e) => {
         e.preventDefault();
         try {
             let groupId = currentGroup.id;
             console.log(groupId);
-            if (localStorage.getItem('localmessages')) {
-                readmessages = JSON.parse(localStorage.getItem('localmessages')) || {};
+            if (!olderBtnClick) {
+                if (localStorage.getItem('localmessages')) {
+                    readmessages = JSON.parse(localStorage.getItem('localmessages')) || {};
+                    implement = readmessages;
+                    oldmessages = readmessages;
+                    localStorage.setItem('oldmessages', JSON.stringify(implement));
+                }
+            } else {
+                oldmessages = JSON.parse(localStorage.getItem('oldmessages')) || {};
+                implement = oldmessages;
             }
-            if (readmessages[groupId].length != 0) {
-                let localOldestarr = readmessages[groupId].filter((chat) => {
-                    return chat.groupId == groupId
-                });
-                let localOldest = localOldestarr[0];
+            olderBtnClick = true;
+            if (implement[groupId].length != 0) {
+                let localOldest = implement[groupId][0];
                 console.log(localOldest);
-                res = await axios.post(`http://localhost:5000/chat/getMessages/${localOldest.id}`, {
+                res = await axios.post(`${BASE_URL}/chat/getMessages/${localOldest.id}`, {
                     groupId,
                 }, {
                     headers: {
@@ -440,9 +497,21 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 });
                 const arr = res.data.chats;
+                if (arr.length < 100) {
+                    console.log('hid');
+                    loadOlderBtn.hidden = true;
+                }
                 arr.pop();
-                readmessages[groupId] = arr.concat(readmessages[groupId]);
-                localStorage.setItem('localmessages', JSON.stringify(readmessages));
+                implement[groupId] = arr.concat(implement[groupId]);
+                localStorage.setItem('oldmessages', JSON.stringify(implement));
+                chatlist.innerHTML = '';
+                implement[groupId].forEach((i) => {
+                    if (i.groupId == groupId)
+                        displayChat(i);
+                })
+
+                chatblock.scrollTop = 0;
+              
                 console.log(arr);
             }
         } catch (err) {
@@ -450,10 +519,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
     });
-    setInterval(() => {
-        loadChats(currentGroup);
-        loadGroups();
-    }, 1000);
+
 
     function displayChat(chat) {
         const chatElement = document.createElement('li');
@@ -463,14 +529,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
     }
 
-    sendMessageBtn.addEventListener('click', async (e) => {
-        e.preventDefault();
+    async function sendMessageFunction() {
         try {
             const groupId = currentGroup.id;
             sendBtnClick = true;
             const message = messageInput.value;
-            messageInput.value='';
-            const response = await axios.post('http://localhost:5000/chat/send', {
+            messageInput.value = '';
+            const response = await axios.post(`${BASE_URL}/chat/send`, {
                 message,
                 groupId
             }, {
@@ -484,21 +549,32 @@ window.addEventListener('DOMContentLoaded', () => {
                 userName: response.data.chat.userName,
                 groupId: response.data.chat.groupId
             };
-            localmessages = {};
             if (localStorage.getItem('localmessages') != null) {
-                localmessages = JSON.parse(localStorage.getItem('localmessages'));
-                if (localmessages[groupId].length > 100) {
-                    localmessages[groupId].shift();
+                readmessages = JSON.parse(localStorage.getItem('localmessages'));
+                if (readmessages[groupId].length > 100) {
+                    readmessages[groupId].shift();
                 }
             }
-            localmessages[groupId].push(data);
-            displayChat(data)
-            localStorage.setItem('localmessages', JSON.stringify(localmessages));
+            readmessages[groupId].push(data);
+            localStorage.setItem('localmessages', JSON.stringify(readmessages));
+            displayChat(data);
             scrollToBottom();
         } catch (err) {
             console.log(err);
         }
 
+    }
+
+    sendMessageBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        sendMessageFunction();
     })
+
+    messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            sendMessageFunction();
+        }
+    });
 
 })

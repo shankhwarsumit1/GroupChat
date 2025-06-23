@@ -61,7 +61,7 @@ const UserModel = sequelize.define('users', {
 })
 
 UserModel.prototype.getJWT =async function(){
-    const token=await JWT.sign({id:this.id,name:this.name},'sumit');
+    const token=await JWT.sign({id:this.id,name:this.name},process.env.SECRETKEY);
     return token;
 }
 

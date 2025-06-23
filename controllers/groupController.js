@@ -2,7 +2,6 @@ const GroupModel = require('../models/groupModel');
 const UserModel = require('../models/UserModel');
 const UserGroup = require('../models/UserGroup');
 const sequelize = require('../utils/db-connect');
-const { where } = require('sequelize');
 const createGroup = async(req,res)=>{
     const transaction = await sequelize.transaction();
     try{  

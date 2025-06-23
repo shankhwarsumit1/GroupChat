@@ -3,14 +3,13 @@ const express = require('express');
 const userRouter = require('./routers/userRouter');
 const chatRouter = require('./routers/chatRouter');
 const groupRouter = require('./routers/groupRouter');
+require('dotenv').config();
 const cors = require('cors');
-const { FORCE } = require('sequelize/lib/index-hints');
 require('./models');
 const app=express();
-app.use(cors({
-    origin:'http://127.0.0.1:5500',
-    methods: ['GET', 'POST', 'PUT', 'DELETE']
-}))
+app.use(express.static('public'))
+
+app.use(cors());
 app.use(express.json());
 
 app.use('/user',userRouter);
@@ -19,7 +18,7 @@ app.use('/',groupRouter);
 
 
 db.sync({force:false}).then(()=>{
-    app.listen(5000,()=>{
+    app.listen(process.env.PORT,()=>{
         console.log('groupchat app running on port 5000');
     })
 })

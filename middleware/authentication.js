@@ -1,6 +1,6 @@
 const JWT = require('jsonwebtoken');
 const UserModel = require('../models/UserModel');
-const SECRETKEY = 'sumit';
+const SECRETKEY = process.env.SECRETKEY;
 
 const authenticate =async (req,res,next)=>{
     try{

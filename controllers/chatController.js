@@ -22,13 +22,13 @@ const getMessages = async(req,res)=>{
     try{  const {messageId} = req.params;
           const {groupId} = req.body;
           let chats;       
-
+          let limit = 101;
           if(messageId==='undefined'){    
             console.log(chats);
          chats = await ChatModel.findAll({
              attributes:['id','message','userName','groupId'],
               order:[['id','desc']],
-              limit:100,
+              limit,
               where:{groupId:groupId}
              });
              console.log(chats);
@@ -39,14 +39,19 @@ const getMessages = async(req,res)=>{
             where:{id:{ [Op.lte]:messageId },
                    groupId:groupId },
                 order:[['id','desc']],
-                limit:100
+                limit,
             })
-         }
-          if(chats.length===0){
+         }         
+         
+         const hasMore = chats.length===limit;
+         if(hasMore){chats.pop();}
+         if(chats.length===0){
            return  res.status(404).json({success:false,res:'no chats found'});
           }
           
-        res.status(200).json({success:true,chats:chats.reverse()});
+
+         
+        res.status(200).json({success:true,chats:chats.reverse(),hasMore});
 
     }
     catch(err){

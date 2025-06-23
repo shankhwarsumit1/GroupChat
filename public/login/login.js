@@ -2,7 +2,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const emailInput = document.querySelector('#email');
     const passwordInput = document.querySelector('#password');
     const loginBtn = document.querySelector('#login-btn');
-    const REST_API = `http://127.0.0.1:5000/user/login`;
+    const REST_API = `${BASE_URL}/user/login`;
 
     loginBtn.addEventListener('click', async (event) => {
         event.preventDefault();
