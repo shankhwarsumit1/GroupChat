@@ -1,1 +1,1 @@
-let BASE_URL=`http://http://3.109.23.255:5000`;
+let BASE_URL=`http://3.109.23.255:5000`;
