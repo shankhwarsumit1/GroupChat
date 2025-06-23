@@ -416,8 +416,8 @@ window.addEventListener('DOMContentLoaded', () => {
         if (!olderBtnClick && !isLoading) {
             isLoading = true;
             try{
-            loadChats(currentGroup);
-            loadGroups();
+            await loadChats(currentGroup);
+            await loadGroups();
             // scrollToBottom();
             console.log("loading");}
             catch(err){
@@ -425,7 +425,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             isLoading = false;
         }
-    }, 3000);
+    }, 1000);
 
     setInterval(() => {
         localStorage.setItem('oldmessages', JSON.stringify({}));
