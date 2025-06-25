@@ -31,7 +31,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (!token || token === null) {
         window.location.href = '/login/login.html';
     };
-
     async function getCurrentUser() {
         try {
             const response = await axios.get(`${BASE_URL}/user/getUserData`, {
@@ -55,6 +54,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     socket.on("connect", () => {
         console.log("Connected to server", socket.id);
+        loadGroups();
     });
 
     socket.on("getonline", (users) => {
@@ -63,7 +63,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     })
 
     socket.on("group-created-for-you", (group) => {
-
+        
         if (group.members.includes(`${currentUser.id}`)) {
             loadGroups();
         }
