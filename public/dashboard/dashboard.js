@@ -63,6 +63,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     })
 
     socket.on("group-created-for-you", (group) => {
+                    console.log('ok');
                     loadGroups();
     });
 
