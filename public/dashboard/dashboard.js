@@ -23,12 +23,11 @@ window.addEventListener('DOMContentLoaded', async () => {
     let currentUser;
     let selectedUserIds = [];
     let readmessages = {};
-    let sendBtnClick = false;
     let currentGroup;
     let oldmessages = {};
     let olderBtnClick = false;
     let onlineUsers = [];
-    let joining=false;
+    let joining = false;
     if (!token || token === null) {
         window.location.href = '/login/login.html';
     };
@@ -72,7 +71,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 
     socket.on("receive-message", (data) => {
-       const groupId = data.groupId;
+        const groupId = data.groupId;
         if (!readmessages[groupId]) {
             readmessages[groupId] = [];
         }
@@ -82,7 +81,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         }
 
         readmessages[groupId].push(data);
-        console.log('msg recievd')
         localStorage.setItem(`localmessages`, JSON.stringify(readmessages));
 
         if (currentGroup && groupId === currentGroup.id) {
@@ -94,7 +92,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     socket.on("removed-from-group", ({
         groupId
     }) => {
-        console.log('removed');
         if (currentGroup && currentGroup.id === groupId) {
             alert("You have been removed from this group");
         }
@@ -105,8 +102,7 @@ window.addEventListener('DOMContentLoaded', async () => {
         message,
         newGroupId
     }) => {
-        console.log(newGroupId)
-           joinMessage(message, newGroupId);
+        joinMessage(message, newGroupId);
     })
 
 
@@ -114,18 +110,18 @@ window.addEventListener('DOMContentLoaded', async () => {
         message,
         groupId
     }) => {
-        console.log(groupId)
-           joinMessage(message, groupId);
+        joinMessage(message, groupId);
     })
 
     function joinGroupRoom(newGroupId) {
         const currentRoom = `group-${currentGroup.id}`
-           console.log(currentGroup.id,newGroupId)
         if (currentGroup && currentGroup.id !== newGroupId) {
-                   console.log('leaving' ,currentRoom); 
-                   socket.emit(`leave-group`, ({currentGroup,currentUser}));
+            console.log('leaving', currentRoom);
+            socket.emit(`leave-group`, ({
+                currentGroup,
+                currentUser
+            }));
         }
-      console.log('joining' ,newGroupId);
         socket.emit("join-group", ({
             newGroupId,
             currentUser
@@ -136,7 +132,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     socket.on("added-to-group", ({
         groupId
     }) => {
-        console.log(groupId);
         loadGroups();
     })
 
@@ -387,18 +382,18 @@ window.addEventListener('DOMContentLoaded', async () => {
 
         groupBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            if (currentGroup && currentGroup.id === group.id){
-             console.log('Group already selected:', group.id);
-             return; 
-              }
+            if (currentGroup && currentGroup.id === group.id) {
+                return;
+            }
             olderBtnClick = false;
             chatlist.innerHTML = '';
             groupHeading.innerHTML = `${groupName}`;
-            if(currentGroup){
-            joinGroupRoom(group.id);  
-            currentGroup = group;}
-            else{currentGroup = group;
-                  joinGroupRoom(group.id);  
+            if (currentGroup) {
+                joinGroupRoom(group.id);
+                currentGroup = group;
+            } else {
+                currentGroup = group;
+                joinGroupRoom(group.id);
             }
             loadOlderBtn.hidden = true;
             settingsBtn.hidden = false;
@@ -503,26 +498,15 @@ window.addEventListener('DOMContentLoaded', async () => {
             if (localStorage.getItem('localmessages')) {
                 readmessages = JSON.parse(localStorage.getItem('localmessages')) || {};
             }
-           
-             if (readmessages != null && readmessages[groupId].length != 0) {
-                const lastChat = readmessages[groupId][readmessages[groupId].length - 1];
-                const lastChatId = lastChat.id;
-                res = await axios.post(`${BASE_URL}/chat/getMessages/${lastChatId}`, {
-                    groupId,
-                }, {
-                    headers: {
-                        'token': token
-                    }
-                })
-            } else {
-                res = await axios.post(`${BASE_URL}/chat/getMessages/${undefined}`, {
-                    groupId,
-                }, {
-                    headers: {
-                        'token': token
-                    }
-                })
-            }
+
+            res = await axios.post(`${BASE_URL}/chat/getMessages/${undefined}`, {
+                groupId,
+            }, {
+                headers: {
+                    'token': token
+                }
+            });
+
 
             const arr = res.data.chats || [];
 
@@ -572,7 +556,6 @@ window.addEventListener('DOMContentLoaded', async () => {
             });
             const arr = res.data.chats;
             if (arr[0].id < readmessages[currentGroup.id][0].id) {
-                console.log('uees');
                 if (chatblock.scrollTop <= 0 && currentGroup) {
                     loadOlderBtn.hidden = false;
                 } else {
@@ -622,7 +605,6 @@ window.addEventListener('DOMContentLoaded', async () => {
                 });
                 const arr = res.data.chats;
                 if (arr.length < 100) {
-                    console.log('hid');
                     loadOlderBtn.hidden = true;
                 }
                 arr.pop();
@@ -648,27 +630,26 @@ window.addEventListener('DOMContentLoaded', async () => {
     function displayChat(chat, last) {
         const chatElement = document.createElement('li');
         chatElement.className = 'chat-element';
-        if(joining){
-            joining=false;
-        chatElement.innerHTML = `<span class="chat">${chat.message}</span>`
-        }
-        else{
+        if (joining) {
+            joining = false;
+            chatElement.innerHTML = `<span class="chat">${chat.message}</span>`
+        } else {
             chatElement.innerHTML = `<span class="user">${chat.userName}:</span><span class="chat">${chat.message}</span>`
         }
-        
+
         chatlist.appendChild(chatElement);
     }
 
 
     async function joinMessage(message, newgroupId) {
         console.log(newgroupId);
-        const groupId=newgroupId
-     
+        const groupId = newgroupId
+
         const data = {
             message,
             groupId: newgroupId
         };
-        joining=true;
+        joining = true;
         displayChat(data);
         scrollToBottom();
     }
@@ -695,7 +676,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             };
 
             socket.emit("send-group-message", data);
-    
+
             if (localStorage.getItem('localmessages') != null) {
                 readmessages = JSON.parse(localStorage.getItem('localmessages'));
                 if (readmessages[groupId].length > 100) {
