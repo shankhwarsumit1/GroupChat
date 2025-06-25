@@ -17,7 +17,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 passwordInput.value='';
                 localStorage.setItem('token',response.data.token);
                 alert(response.data.res)
-                window.location.href = '../dashboard/dashboard.html'
+                window.location.href = '/dashboard/dashboard.html'
             }
         } catch (err) {
             alert(err.response.data.error);

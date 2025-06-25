@@ -1,4 +1,5 @@
 const ChatModel = require('../models/ChatModel');
+
 const {Op} = require('sequelize');
 
 const sendMessage = async(req,res)=>{
@@ -24,7 +25,6 @@ const getMessages = async(req,res)=>{
           let chats;       
           let limit = 101;
           if(messageId==='undefined'){    
-            console.log(chats);
          chats = await ChatModel.findAll({
              attributes:['id','message','userName','groupId'],
               order:[['id','desc']],
@@ -49,8 +49,6 @@ const getMessages = async(req,res)=>{
            return  res.status(404).json({success:false,res:'no chats found'});
           }
           
-
-         
         res.status(200).json({success:true,chats:chats.reverse(),hasMore});
 
     }

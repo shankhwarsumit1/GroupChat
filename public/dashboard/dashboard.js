@@ -1,4 +1,4 @@
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
     const messageInput = document.getElementById('message');
     const sendMessageBtn = document.getElementById('send-btn');
     const token = localStorage.getItem('token');
@@ -19,6 +19,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const closeSettings = document.getElementById('close-settings');
     const settingsDoneBtn = document.getElementById('settings-done-btn');
     const settingsUserList = document.getElementById('settings-users-list');
+    const onlineUsersList = document.getElementById('online-users-list');
     let currentUser;
     let selectedUserIds = [];
     let readmessages = {};
@@ -26,9 +27,126 @@ window.addEventListener('DOMContentLoaded', () => {
     let currentGroup;
     let oldmessages = {};
     let olderBtnClick = false;
+    let onlineUsers = [];
+    let joining=false;
     if (!token || token === null) {
-        window.location.href = '../login/login.html';
+        window.location.href = '/login/login.html';
     };
+
+    async function getCurrentUser() {
+        try {
+            const response = await axios.get(`${BASE_URL}/user/getUserData`, {
+                headers: {
+                    'token': token
+                }
+            });
+            currentUser = response.data.res;
+            return currentUser;
+        } catch (err) {
+            console.log(err);
+        }
+    }
+    currentUser = await getCurrentUser();
+
+    const socket = io(`${BASE_URL}`, {
+        query: {
+            userId: parseInt(currentUser.id),
+        },
+    });
+
+    socket.on("connect", () => {
+        console.log("Connected to server", socket.id);
+    });
+
+    socket.on("getonline", (users) => {
+        setOnline(users);
+        onlineUsers.push(users);
+    })
+
+    socket.on("group-created-for-you", (group) => {
+
+        if (group.members.includes(`${currentUser.id}`)) {
+            loadGroups();
+        }
+    });
+
+
+    socket.on("receive-message", (data) => {
+       const groupId = data.groupId;
+        if (!readmessages[groupId]) {
+            readmessages[groupId] = [];
+        }
+
+        if (readmessages[groupId].length > 100) {
+            readmessages[groupId].shift();
+        }
+
+        readmessages[groupId].push(data);
+        console.log('msg recievd')
+        localStorage.setItem(`localmessages`, JSON.stringify(readmessages));
+
+        if (currentGroup && groupId === currentGroup.id) {
+            displayChat(data);
+            scrollToBottom();
+        }
+    });
+
+    socket.on("removed-from-group", ({
+        groupId
+    }) => {
+        console.log('removed');
+        if (currentGroup && currentGroup.id === groupId) {
+            alert("You have been removed from this group");
+        }
+        loadGroups();
+    });
+
+    socket.on("user-joined", ({
+        message,
+        newGroupId
+    }) => {
+        console.log(newGroupId)
+           joinMessage(message, newGroupId);
+    })
+
+
+    socket.on("left-chat", ({
+        message,
+        groupId
+    }) => {
+        console.log(groupId)
+           joinMessage(message, groupId);
+    })
+
+    function joinGroupRoom(newGroupId) {
+        const currentRoom = `group-${currentGroup.id}`
+           console.log(currentGroup.id,newGroupId)
+        if (currentGroup && currentGroup.id !== newGroupId) {
+                   console.log('leaving' ,currentRoom); 
+                   socket.emit(`leave-group`, ({currentGroup,currentUser}));
+        }
+      console.log('joining' ,newGroupId);
+        socket.emit("join-group", ({
+            newGroupId,
+            currentUser
+        }));
+    }
+
+
+    socket.on("added-to-group", ({
+        groupId
+    }) => {
+        console.log(groupId);
+        loadGroups();
+    })
+
+    socket.on("made-admin", ({
+        groupId
+    }) => {
+        if (currentGroup && currentGroup.id === groupId) {
+            alert("you are now an admin of this group");
+        }
+    });
 
     settingsBtn.addEventListener('click', async () => {
         settingsModal.classList.remove('hidden');
@@ -54,7 +172,7 @@ window.addEventListener('DOMContentLoaded', () => {
                         let addBtnHTML = '';
                         let removeUserBtnHTML = '';
                         if (user.isMember && user.isAdmin) {
-                            addBtnHTML = `<span style="color:green;font-weight:bold">Admin</span>`;
+                            adminBtnHTML = `<span style="color:green;font-weight:bold">Admin</span>`;
                             removeUserBtnHTML = `<button class="remove-btn" data-id="${user.id}">Remove</button>`
                         } else if (user.isMember && !user.isAdmin) {
                             adminBtnHTML = `<button class="admin-btn" data-id="${user.id}">Make Admin</button>`;
@@ -88,6 +206,10 @@ window.addEventListener('DOMContentLoaded', () => {
                                     token
                                 }
                             });
+                            socket.emit("user-removed-from-group", {
+                                groupId: currentGroup.id,
+                                userId
+                            });
                             const li = rmbtn.parentElement;
                             const nameEmail = li.querySelector('span').innerText;
                             li.innerHTML = `<span>${nameEmail}</span><button class="add-btn" data-id="${userId}">Add</button>`;
@@ -102,6 +224,11 @@ window.addEventListener('DOMContentLoaded', () => {
                                         token
                                     }
                                 });
+                                socket.emit("user-added-to-group", {
+                                    groupId: currentGroup.id,
+                                    userId
+                                });
+
                                 newAddBtn.innerText = 'Added';
                                 newAddBtn.disabled = true;
                             });
@@ -142,6 +269,12 @@ window.addEventListener('DOMContentLoaded', () => {
                                 token
                             }
                         });
+
+                        socket.emit("user-made-admin", {
+                            groupId: currentGroup.id,
+                            userId
+                        });
+
                         btn.innerText = 'Admin';
                         btn.disabled = true;
                     });
@@ -168,24 +301,35 @@ window.addEventListener('DOMContentLoaded', () => {
     })
 
 
-    async function getCurrentUser() {
+
+
+    async function setOnline(users) {
         try {
-            const response = await axios.get(`${BASE_URL}/user/getUserData`, {
+            const res = await axios.get(`${BASE_URL}/user/getAllUsers`, {
                 headers: {
-                    'token': token
+                    token
                 }
             });
-            currentUser = response.data.res;
+            const usersParse = users.map(user => parseInt(user));
+            onlineUsersList.innerHTML = "";
+            res.data.res.forEach((user) => {
+                if (usersParse.includes(user.id)) {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<span id="green-dot"></span> ${user.name}`;
+                    onlineUsersList.appendChild(li);
+                }
+            });
+
         } catch (err) {
             console.log(err);
         }
     }
-    getCurrentUser();
+
 
     logoutBtn.addEventListener('click', (e) => {
         e.preventDefault();
         localStorage.removeItem('token');
-        window.location.href = '../login/login.html';
+        window.location.href = '/login/login.html';
 
     });
 
@@ -196,6 +340,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     async function loadGroups() {
         try {
+
             let isGroupExists = false;
             const res = await axios.get(`${BASE_URL}/getGroups`, {
                 headers: {
@@ -203,7 +348,6 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
             });
             grouplist.innerHTML = '';
-
             res.data.groups.forEach((grp) => {
                 if (currentGroup) {
                     if (grp.id === currentGroup.id) {
@@ -211,7 +355,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 }
                 displayGroup(grp);
-            })
+            });
 
             if (currentGroup && !isGroupExists) {
                 window.location.reload();
@@ -243,16 +387,37 @@ window.addEventListener('DOMContentLoaded', () => {
 
         groupBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            if (currentGroup && currentGroup.id === group.id){
+             console.log('Group already selected:', group.id);
+             return; 
+              }
             olderBtnClick = false;
             chatlist.innerHTML = '';
             groupHeading.innerHTML = `${groupName}`;
-            currentGroup = group;
+            if(currentGroup){
+            joinGroupRoom(group.id);  
+            currentGroup = group;}
+            else{currentGroup = group;
+                  joinGroupRoom(group.id);  
+            }
             loadOlderBtn.hidden = true;
             settingsBtn.hidden = false;
             implementChatSection(group);
         })
 
     }
+
+    async function implementChatSection(group) {
+        try {
+            loadChats(group.id);
+            messageInput.hidden = false;
+            sendMessageBtn.hidden = false;
+        } catch (err) {
+            console.log(err);
+
+        }
+    }
+
 
     // Show modal
     createGroupBtn.addEventListener('click', async () => {
@@ -269,11 +434,7 @@ window.addEventListener('DOMContentLoaded', () => {
             res.data.res.forEach(user => {
                 if (currentUser.id != user.id) {
                     const li = document.createElement('li');
-                    li.innerHTML = `
-        <span>${user.name}</span>
-        <span>${user.email}</span>
-        <button class="add-user-btn" data-id="${user.id}">Add</button>
-      `;
+                    li.innerHTML = `<span>${user.name}</span> <span>${user.email}</span> <button class="add-user-btn" data-id="${user.id}">Add</button>`;
                     allUsersList.appendChild(li);
                 }
             });
@@ -320,8 +481,14 @@ window.addEventListener('DOMContentLoaded', () => {
                 }
             });
             let group = res.data.group;
-            displayGroup(group);
+
+            socket.emit("new-group-created", {
+                groupId: group.id,
+                groupName: group.groupName,
+                members: selectedUserIds,
+            })
             alert('Group created!');
+            displayGroup(group);
             window.location.reload();
         } catch (err) {
             console.error('Error creating group:', err);
@@ -329,40 +496,15 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-
-    async function implementChatSection(group) {
-        try {
-            loadChats(group);
-            messageInput.hidden = false;
-            sendMessageBtn.hidden = false;
-        } catch (err) {
-            console.log(err);
-
-        }
-    }
-
-    async function loadChats(group) {
-        let groupId = group.id;
+    async function loadChats(Id) {
+        let groupId = Id;
         try {
             let res;
             if (localStorage.getItem('localmessages')) {
                 readmessages = JSON.parse(localStorage.getItem('localmessages')) || {};
-                readmessages[groupId] = readmessages[groupId].filter((chat) => {
-                    return chat.groupId == groupId
-                });
             }
-            if (!sendBtnClick) {
-                res = await axios.post(`${BASE_URL}/chat/getMessages/${undefined}`, {
-                        groupId
-                    }, {
-                        headers: {
-                            'token': token
-                        }
-                    },
-
-                );
-            } else if (readmessages != null && readmessages[groupId].length != 0) {
-                sendBtnClick = false;
+           
+             if (readmessages != null && readmessages[groupId].length != 0) {
                 const lastChat = readmessages[groupId][readmessages[groupId].length - 1];
                 const lastChatId = lastChat.id;
                 res = await axios.post(`${BASE_URL}/chat/getMessages/${lastChatId}`, {
@@ -373,7 +515,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     }
                 })
             } else {
-                sendBtnClick = false;
                 res = await axios.post(`${BASE_URL}/chat/getMessages/${undefined}`, {
                     groupId,
                 }, {
@@ -384,8 +525,6 @@ window.addEventListener('DOMContentLoaded', () => {
             }
 
             const arr = res.data.chats || [];
-            const hasMore = res.data.hasMore;
-
 
             if (readmessages[groupId].length != 0) {
                 arr.forEach((chat) => {
@@ -401,9 +540,9 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             localStorage.setItem('localmessages', JSON.stringify(readmessages));
             chatlist.innerHTML = '';
+            console.log(readmessages[groupId]);
             readmessages[groupId].forEach((i) => {
-                if (i.groupId == groupId)
-                    displayChat(i);
+                displayChat(i);
             })
 
         } catch (err) {
@@ -411,25 +550,10 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    let isLoading = false;
-    setInterval(async() => {
-        if (!olderBtnClick && !isLoading) {
-            isLoading = true;
-            try{
-            await loadChats(currentGroup);
-            await loadGroups();
-            // scrollToBottom();
-            console.log("loading");}
-            catch(err){
-                console.log(err);
-            }
-            isLoading = false;
-        }
-    }, 1000);
 
     setInterval(() => {
         localStorage.setItem('oldmessages', JSON.stringify({}));
-                                scrollToBottom();
+        scrollToBottom();
     }, 2 * 60 * 1000);
 
 
@@ -455,14 +579,14 @@ window.addEventListener('DOMContentLoaded', () => {
                     loadOlderBtn.hidden = true;
                 }
             }
-        } else  {
-             const clientHeight = chatblock.clientHeight;
-             const scrollHeight = chatblock.scrollHeight;
-             const scrollTop= chatblock.scrollTop;
-            if(clientHeight+scrollTop>=scrollHeight-1){
-               olderBtnClick=false;
-               loadOlderBtn.hidden=true;
-             }
+        } else {
+            const clientHeight = chatblock.clientHeight;
+            const scrollHeight = chatblock.scrollHeight;
+            const scrollTop = chatblock.scrollTop;
+            if (clientHeight + scrollTop >= scrollHeight - 1) {
+                olderBtnClick = false;
+                loadOlderBtn.hidden = true;
+            }
         }
     });
 
@@ -511,7 +635,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 })
 
                 chatblock.scrollTop = 0;
-              
+
                 console.log(arr);
             }
         } catch (err) {
@@ -521,12 +645,32 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    function displayChat(chat) {
+    function displayChat(chat, last) {
         const chatElement = document.createElement('li');
         chatElement.className = 'chat-element';
-        chatElement.innerHTML = `<span class="user">${chat.userName}:</span><span class="chat">${chat.message}</span>`
+        if(joining){
+            joining=false;
+        chatElement.innerHTML = `<span class="chat">${chat.message}</span>`
+        }
+        else{
+            chatElement.innerHTML = `<span class="user">${chat.userName}:</span><span class="chat">${chat.message}</span>`
+        }
+        
         chatlist.appendChild(chatElement);
+    }
 
+
+    async function joinMessage(message, newgroupId) {
+        console.log(newgroupId);
+        const groupId=newgroupId
+     
+        const data = {
+            message,
+            groupId: newgroupId
+        };
+        joining=true;
+        displayChat(data);
+        scrollToBottom();
     }
 
     async function sendMessageFunction() {
@@ -549,6 +693,9 @@ window.addEventListener('DOMContentLoaded', () => {
                 userName: response.data.chat.userName,
                 groupId: response.data.chat.groupId
             };
+
+            socket.emit("send-group-message", data);
+    
             if (localStorage.getItem('localmessages') != null) {
                 readmessages = JSON.parse(localStorage.getItem('localmessages'));
                 if (readmessages[groupId].length > 100) {
