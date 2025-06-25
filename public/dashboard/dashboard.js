@@ -63,10 +63,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     })
 
     socket.on("group-created-for-you", (group) => {
-        
-        if (group.members.includes(`${currentUser.id}`)) {
-            loadGroups();
-        }
+                    loadGroups();
     });
 
 
