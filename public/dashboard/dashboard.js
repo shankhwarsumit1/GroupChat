@@ -221,7 +221,6 @@ window.addEventListener('DOMContentLoaded', async () => {
                                     groupId: currentGroup.id,
                                     userId
                                 });
-
                                 newAddBtn.innerText = 'Added';
                                 newAddBtn.disabled = true;
                             });
@@ -235,7 +234,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
                 document.querySelectorAll('.add-btn').forEach(btn => {
                     btn.addEventListener('click', async () => {
-                        const userId = btn.getAttribute('data-id');
+                        const userId = parseInt(btn.getAttribute('data-id'));
                         await axios.post(`${BASE_URL}/addUser`, {
                             groupId: currentGroup.id,
                             userId
@@ -244,6 +243,10 @@ window.addEventListener('DOMContentLoaded', async () => {
                                 token
                             }
                         });
+                         socket.emit("user-added-to-group", {
+                                    groupId: currentGroup.id,
+                                    userId
+                                });
                         btn.innerText = 'Added';
                         btn.disabled = true;
                     });
